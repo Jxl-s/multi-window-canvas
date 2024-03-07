@@ -27,15 +27,49 @@ function drawLine(startX, startY, endX, endY) {
     ctx.stroke();
 }
 
+function drawCircle(x, y) {
+    ctx.beginPath();
+    ctx.arc(x, y, 10, 0, 2 * Math.PI);
+    ctx.fillStyle = "white";
+    ctx.fill();
+}
+
+const startTime = Date.now();
+let lastDelta = Date.now();
+
+function getDelta() {
+    const delta = Date.now() - lastDelta;
+    lastDelta = Date.now();
+    return delta;
+}
+
+function getElapsedTime() {
+    return Date.now() - startTime;
+}
+
+const MOVE_AMPLITUDE_X = Math.random() * 100;
+const MOVE_FREQUENCY_X = Math.random() * 1000;
+const MOVE_AMPLITUDE_Y = Math.random() * 100;
+const MOVE_FREQUENCY_Y = Math.random() * 1000;
+
+const MOVE_OFFSET_X = Math.random() * 100;
+const MOVE_OFFSET_Y = Math.random() * 100;
+
 function animate() {
     const windows = JSON.parse(localStorage.getItem("windows"));
 
     // Update the session
     const { centerX, centerY } = calculateScreenCenter();
+    const [offsetX, offsetY] = [
+        Math.sin(getElapsedTime() / MOVE_FREQUENCY_X + MOVE_OFFSET_X) *
+            MOVE_AMPLITUDE_X,
+        Math.sin(getElapsedTime() / MOVE_FREQUENCY_Y + MOVE_OFFSET_Y) *
+            MOVE_AMPLITUDE_Y,
+    ];
     windows[SESSION_UUID] = {
         time: Date.now(),
-        centerX,
-        centerY,
+        centerX: centerX + offsetX,
+        centerY: centerY + offsetY,
     };
 
     // If one hasn't pinged for 1 seconds, remove
@@ -66,6 +100,14 @@ function animate() {
 
             drawLine(window1X, window1Y, window2X, window2Y);
         }
+    }
+
+    // Draw circle on top after
+    for (const uuid in windows) {
+        drawCircle(
+            windows[uuid].centerX - window.screenX,
+            windows[uuid].centerY - window.screenY
+        );
     }
 
     localStorage.setItem("windows", JSON.stringify(windows));
